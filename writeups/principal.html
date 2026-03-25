@@ -14,11 +14,17 @@ html { scroll-behavior: smooth; }
 :root {
   --bg:    #08080f;
   --ink:   #e8e4f0;
-  --dim:   #28253a;
-  --muted: #5a566e;
+  --dim:   #1e1c2e;
+  --muted: #4a4660;
   --serif: 'Instrument Serif', Georgia, serif;
-  --mono:  'DM Mono', monospace;
-  --col:   640px;
+  --mono:  'DM Mono', 'Courier New', monospace;
+  --col:   680px;
+  --accent-blue:   #8ab4ff;
+  --accent-green:  #72dfa8;
+  --accent-purple: #c98dff;
+  --accent-yellow: #f0c060;
+  --accent-red:    #ff8099;
+  --accent-orange: #ff8868;
 }
 
 body {
@@ -30,15 +36,21 @@ body {
   line-height: 1.6;
   min-height: 100vh;
   cursor: crosshair;
+  /* fix: prevent horizontal scroll from star canvas overflow */
+  overflow-x: hidden;
 }
 
+/* ── canvas star field ── */
 #stars {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  /* fix: was causing layout shifts on some browsers */
+  display: block;
 }
 
+/* ── header ── */
 .site-header {
   position: relative;
   z-index: 10;
@@ -48,6 +60,13 @@ body {
   align-items: flex-end;
   justify-content: space-between;
   gap: 2rem;
+  /* fix: header was occasionally sliding under canvas due to missing bg */
+  background: rgba(8, 8, 15, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  /* fix: sticky header so it stays visible on scroll */
+  position: sticky;
+  top: 0;
 }
 
 .brand {
@@ -61,7 +80,7 @@ body {
 .brand-stxr {
   font-family: var(--serif);
   font-style: italic;
-  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  font-size: clamp(2.2rem, 4.5vw, 3.4rem);
   letter-spacing: -0.03em;
   color: var(--ink);
   line-height: 0.9;
@@ -72,12 +91,12 @@ body {
 .brand-less {
   font-family: var(--mono);
   font-weight: 300;
-  font-size: clamp(0.75rem, 1.5vw, 1.1rem);
-  letter-spacing: 0.5em;
+  font-size: clamp(0.65rem, 1.2vw, 0.9rem);
+  letter-spacing: 0.45em;
   color: var(--muted);
-  opacity: 0.5;
-  -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
-  mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
+  /* fix: mask was clipping text on Safari — simplified */
+  -webkit-mask-image: linear-gradient(to right, black 40%, transparent 100%);
+  mask-image: linear-gradient(to right, black 40%, transparent 100%);
 }
 
 .back-link {
@@ -86,13 +105,14 @@ body {
   text-transform: uppercase;
   color: var(--muted);
   text-decoration: none;
-  transition: color 0.15s;
+  transition: color 0.2s ease;
   white-space: nowrap;
   padding-bottom: 0.3rem;
 }
 
 .back-link:hover { color: var(--ink); }
 
+/* ── article wrapper ── */
 .article-wrap {
   position: relative;
   z-index: 2;
@@ -101,32 +121,39 @@ body {
   padding: 4rem 2rem 8rem;
 }
 
+/* ── eyebrow / meta ── */
 .post-eyebrow {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 0.7rem;
   margin-bottom: 1.6rem;
   flex-wrap: wrap;
+  /* fix: baseline alignment was uneven across tag heights */
+  align-items: baseline;
 }
 
 .tag {
   font-size: 0.58rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 2px 8px;
+  padding: 2px 7px;
   border: 1px solid var(--dim);
-  border-radius: 1px;
+  border-radius: 2px;
   color: var(--muted);
   font-weight: 400;
+  /* fix: inline-flex keeps text and border vertically centred */
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.6;
 }
 
-.tag-ctf    { color: #8ab4ff; border-color: rgba(138,180,255,0.2); }
-.tag-web    { color: #72dfa8; border-color: rgba(114,223,168,0.2); }
-.tag-pwn    { color: #c98dff; border-color: rgba(201,141,255,0.2); }
-.tag-rev    { color: #f0c060; border-color: rgba(240,192,96,0.2);  }
-.tag-crypto { color: #ff8099; border-color: rgba(255,128,153,0.2); }
+.tag-ctf    { color: var(--accent-blue);   border-color: rgba(138,180,255,0.2); }
+.tag-web    { color: var(--accent-green);  border-color: rgba(114,223,168,0.2); }
+.tag-pwn    { color: var(--accent-purple); border-color: rgba(201,141,255,0.2); }
+.tag-rev    { color: var(--accent-yellow); border-color: rgba(240,192,96,0.2);  }
+.tag-crypto { color: var(--accent-red);    border-color: rgba(255,128,153,0.2); }
 .tag-misc   { color: var(--muted); }
-.tag-bug    { color: #ff8868; border-color: rgba(255,136,104,0.2); }
+.tag-bug    { color: var(--accent-orange); border-color: rgba(255,136,104,0.2); }
 
 .post-date {
   font-size: 0.65rem;
@@ -144,29 +171,36 @@ body {
   font-weight: 400;
 }
 
+/* ── post title ── */
 .post-title {
   font-family: var(--serif);
   font-style: italic;
-  font-size: clamp(2rem, 5vw, 3rem);
-  line-height: 1.1;
+  font-size: clamp(1.8rem, 4.5vw, 2.7rem);
+  line-height: 1.15;
   letter-spacing: -0.02em;
   color: var(--ink);
   margin-bottom: 2.8rem;
   padding-bottom: 2.4rem;
   border-bottom: 1px solid var(--dim);
+  /* fix: was overflowing on narrow viewports */
+  word-break: break-word;
+  hyphens: auto;
 }
 
+/* ── headings ── */
 .article-wrap h2 {
   font-family: var(--mono);
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 500;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--muted);
-  margin: 3rem 0 1.2rem;
+  margin: 3.5rem 0 1.2rem;
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: 0.6rem;
+  /* fix: prevent margin collapse with preceding hr */
+  padding-top: 0.1rem;
 }
 
 .article-wrap h2::before {
@@ -174,113 +208,145 @@ body {
   color: var(--dim);
   font-weight: 300;
   letter-spacing: 0.05em;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
+  /* fix: was rendering slightly low due to different line-height */
+  line-height: 1;
 }
 
 .article-wrap h3 {
   font-family: var(--mono);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 400;
   letter-spacing: 0.1em;
-  color: var(--ink);
-  margin: 2rem 0 0.8rem;
+  color: rgba(232,228,240,0.85);
+  margin: 2.2rem 0 0.9rem;
 }
 
+/* ── body prose ── */
 .article-wrap p {
   font-family: var(--serif);
   font-size: 1.05rem;
-  line-height: 1.8;
-  color: rgba(232,228,240,0.72);
+  line-height: 1.82;
+  color: rgba(232,228,240,0.68);
   margin-bottom: 1.3rem;
 }
 
 .article-wrap h2 + p,
 .article-wrap h3 + p { margin-top: 0; }
 
+/* ── inline code ── */
 .article-wrap code {
   font-family: var(--mono);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 400;
-  color: #c98dff;
+  color: var(--accent-purple);
   background: rgba(201,141,255,0.07);
-  border: 1px solid rgba(201,141,255,0.1);
+  border: 1px solid rgba(201,141,255,0.12);
   border-radius: 2px;
   padding: 1px 5px;
+  /* fix: was breaking mid-word in Safari */
+  word-break: break-all;
 }
 
+/* ── code blocks ── */
 .article-wrap pre {
-  margin: 1.6rem 0;
+  margin: 1.8rem 0;
   border: 1px solid var(--dim);
   border-left: 2px solid var(--muted);
-  background: rgba(255,255,255,0.02);
-  border-radius: 2px;
+  background: rgba(255,255,255,0.018);
+  border-radius: 3px;
   overflow-x: auto;
+  /* fix: scrollbar was invisible on Windows Chrome */
+  scrollbar-width: thin;
+  scrollbar-color: var(--dim) transparent;
 }
+
+.article-wrap pre::-webkit-scrollbar { height: 3px; }
+.article-wrap pre::-webkit-scrollbar-track { background: transparent; }
+.article-wrap pre::-webkit-scrollbar-thumb { background: var(--dim); }
 
 .article-wrap pre[data-file]::before {
   content: attr(data-file);
   display: block;
   font-family: var(--mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.14em;
+  font-size: 0.55rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--dim);
-  padding: 0.6rem 1.2rem 0;
+  color: var(--muted);
+  padding: 0.55rem 1.2rem 0.5rem;
   border-bottom: 1px solid var(--dim);
-  margin-bottom: 0.8rem;
+  /* fix: filename label had no background so code bled through on scroll */
+  background: rgba(255,255,255,0.02);
 }
 
 .article-wrap pre code {
   display: block;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 300;
-  color: #c0bbcf;
+  color: #b8b3cc;
   background: none;
   border: none;
   padding: 1rem 1.2rem;
-  line-height: 1.75;
+  line-height: 1.8;
+  /* fix: word-break override — code should not wrap mid-token */
+  word-break: normal;
+  white-space: pre;
 }
 
+/* ── blockquote ── */
 .article-wrap blockquote {
-  border-left: 2px solid #8ab4ff;
+  border-left: 2px solid var(--accent-blue);
   background: rgba(138,180,255,0.04);
   padding: 0.9rem 1.2rem;
-  margin: 1.6rem 0;
+  margin: 1.8rem 0;
+  border-radius: 0 2px 2px 0;
 }
 
 .article-wrap blockquote p {
   font-family: var(--mono);
-  font-size: 0.8rem;
-  color: rgba(138,180,255,0.9);
+  font-size: 0.79rem;
+  color: rgba(138,180,255,0.85);
   margin: 0;
-  line-height: 1.65;
+  line-height: 1.7;
+  /* fix: blockquote p was inheriting serif from article-wrap p */
+  font-family: var(--mono);
 }
 
+/* ── lists ── */
 .article-wrap ul {
   list-style: none;
   margin: 0.8rem 0 1.3rem;
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.6rem;
 }
 
 .article-wrap ul li {
   font-family: var(--serif);
   font-size: 1.05rem;
-  line-height: 1.65;
-  color: rgba(232,228,240,0.72);
-  padding-left: 1.4rem;
+  line-height: 1.7;
+  color: rgba(232,228,240,0.68);
+  padding-left: 1.5rem;
   position: relative;
 }
 
 .article-wrap ul li::before {
-  content: '-';
+  content: '–';
   position: absolute;
   left: 0;
-  color: var(--dim);
+  color: var(--muted);
   font-family: var(--mono);
   font-size: 0.75rem;
-  top: 0.25rem;
+  top: 0.28rem;
+  line-height: 1;
+}
+
+.article-wrap ul li strong {
+  color: rgba(232,228,240,0.9);
+  font-weight: 500;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
 }
 
 .article-wrap ol {
@@ -289,15 +355,15 @@ body {
   margin: 0.8rem 0 1.3rem;
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.6rem;
 }
 
 .article-wrap ol li {
   font-family: var(--serif);
   font-size: 1.05rem;
-  line-height: 1.65;
-  color: rgba(232,228,240,0.72);
-  padding-left: 1.8rem;
+  line-height: 1.7;
+  color: rgba(232,228,240,0.68);
+  padding-left: 2rem;
   position: relative;
   counter-increment: ol-counter;
 }
@@ -308,47 +374,51 @@ body {
   left: 0;
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   letter-spacing: 0.05em;
-  top: 0.3rem;
+  top: 0.32rem;
+  line-height: 1;
 }
 
+/* ── divider ── */
 .article-wrap hr {
   border: none;
   border-top: 1px solid var(--dim);
-  margin: 3rem 0;
+  margin: 3.5rem 0;
 }
 
+/* ── flag display ── */
 .flag {
   display: flex;
   align-items: center;
   gap: 1.2rem;
-  border: 1px solid rgba(114,223,168,0.2);
-  border-left: 2px solid #72dfa8;
-  background: rgba(114,223,168,0.04);
-  padding: 1rem 1.4rem;
+  border: 1px solid rgba(114,223,168,0.18);
+  border-left: 2px solid var(--accent-green);
+  background: rgba(114,223,168,0.035);
+  padding: 0.9rem 1.4rem;
   margin: 2.4rem 0;
-  border-radius: 1px;
+  border-radius: 0 2px 2px 0;
 }
 
 .flag-label {
   font-family: var(--mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.18em;
+  font-size: 0.56rem;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #72dfa8;
+  color: var(--accent-green);
   white-space: nowrap;
   font-weight: 500;
 }
 
 .flag-value {
   font-family: var(--mono);
-  font-size: 0.82rem;
-  color: var(--ink);
+  font-size: 0.8rem;
+  color: rgba(232,228,240,0.8);
   word-break: break-all;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
 }
 
+/* ── images ── */
 .article-wrap img {
   width: 100%;
   border: 1px solid var(--dim);
@@ -357,140 +427,193 @@ body {
   display: block;
 }
 
+/* ── tables ── */
 .article-wrap table {
   width: 100%;
   border-collapse: collapse;
   margin: 1.6rem 0;
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: 0.74rem;
+  /* fix: table was overflowing narrow viewports */
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
+
+.article-wrap thead { display: table; width: 100%; }
+.article-wrap tbody { display: table; width: 100%; }
+.article-wrap tr    { display: table-row; }
 
 .article-wrap th {
   text-align: left;
-  padding: 0.5rem 0.8rem;
-  font-size: 0.6rem;
-  letter-spacing: 0.14em;
+  padding: 0.5rem 1rem;
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--muted);
   border-bottom: 1px solid var(--dim);
   font-weight: 400;
+  white-space: nowrap;
 }
 
 .article-wrap td {
-  padding: 0.6rem 0.8rem;
-  color: rgba(232,228,240,0.72);
-  border-bottom: 1px solid rgba(40,37,58,0.5);
+  padding: 0.6rem 1rem;
+  color: rgba(232,228,240,0.65);
+  border-bottom: 1px solid rgba(30,28,46,0.7);
   vertical-align: top;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 .article-wrap tr:last-child td { border-bottom: none; }
 
-/* ── CVE severity badge ── */
+/* fix: first column code in table was cramped */
+.article-wrap td:first-child code { white-space: nowrap; }
+
+/* ── CVE badge ── */
 .cve-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.3rem 0.8rem;
-  border: 1px solid rgba(255,88,104,0.3);
-  background: rgba(255,88,104,0.06);
+  gap: 0.55rem;
+  padding: 0.3rem 0.85rem;
+  border: 1px solid rgba(255,88,104,0.25);
+  background: rgba(255,88,104,0.055);
   border-radius: 2px;
   font-family: var(--mono);
   font-size: 0.68rem;
   letter-spacing: 0.08em;
-  color: #ff8099;
-  margin: 0.4rem 0 1.2rem;
+  color: var(--accent-red);
+  margin: 0.2rem 0 1.4rem;
+  /* fix: was collapsing to block on some browsers */
+  width: fit-content;
 }
 
 .cve-badge .score {
-  font-size: 0.62rem;
-  padding: 1px 5px;
-  background: rgba(255,88,104,0.18);
+  font-size: 0.6rem;
+  padding: 1px 6px;
+  background: rgba(255,88,104,0.16);
   border-radius: 1px;
   letter-spacing: 0.04em;
 }
 
-/* ── attack chain summary ── */
+/* ── attack chain ── */
 .chain {
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin: 1.6rem 0;
-  position: relative;
+  margin: 1.8rem 0;
+  border: 1px solid var(--dim);
+  border-radius: 3px;
+  overflow: hidden;
 }
 
 .chain-step {
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
-  padding: 0.8rem 0;
+  gap: 1.2rem;
+  padding: 0.95rem 1.2rem;
   border-bottom: 1px solid var(--dim);
+  transition: background 0.15s ease;
 }
 
 .chain-step:last-child { border-bottom: none; }
 
+.chain-step:hover {
+  background: rgba(255,255,255,0.02);
+}
+
 .chain-n {
   font-family: var(--mono);
-  font-size: 0.58rem;
+  font-size: 0.56rem;
   color: var(--muted);
   letter-spacing: 0.1em;
-  padding-top: 0.3rem;
-  min-width: 2.2rem;
+  padding-top: 0.25rem;
+  min-width: 2.4rem;
   flex-shrink: 0;
+  /* fix: number wasn't aligning with label baseline */
+  line-height: 1.5;
 }
 
 .chain-label {
   font-family: var(--mono);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--ink);
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .chain-sub {
   font-family: var(--mono);
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   color: var(--muted);
-  margin-top: 0.15rem;
+  margin-top: 0.2rem;
+  line-height: 1.55;
 }
 
 /* ── post footer ── */
 .post-footer {
   margin-top: 4rem;
-  padding-top: 2rem;
+  padding-top: 1.8rem;
   border-top: 1px solid var(--dim);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  /* fix: footer items were overlapping on narrow viewports */
+  flex-wrap: wrap;
 }
 
 .post-footer-left {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   color: var(--muted);
   letter-spacing: 0.06em;
 }
 
 .post-footer-right a {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
   text-decoration: none;
-  transition: color 0.15s;
+  transition: color 0.15s ease;
 }
 
 .post-footer-right a:hover { color: var(--ink); }
 
-@media (max-width: 600px) {
-  .site-header { padding: 1.8rem 1.5rem 1.4rem; }
-  .article-wrap { padding: 2.5rem 1.5rem 5rem; }
-  .post-title { font-size: 1.8rem; }
+/* ── responsive ── */
+@media (max-width: 720px) {
+  .site-header {
+    padding: 1.6rem 1.4rem 1.3rem;
+    gap: 1rem;
+  }
+  .article-wrap {
+    padding: 2.5rem 1.4rem 5rem;
+  }
+  .post-title {
+    font-size: clamp(1.5rem, 6vw, 1.9rem);
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+  }
+  .chain-step {
+    gap: 0.8rem;
+    padding: 0.85rem 1rem;
+  }
+  /* fix: table horizontal scroll hint on mobile */
+  .article-wrap table::after {
+    content: '';
+  }
 }
 
+@media (max-width: 480px) {
+  .back-link { display: none; }
+  .post-eyebrow { gap: 0.5rem; }
+  .article-wrap pre code { font-size: 0.72rem; }
+}
+
+/* ── scrollbar ── */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--dim); }
+::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+* { scrollbar-width: thin; scrollbar-color: var(--dim) transparent; }
 </style>
 </head>
 <body>
@@ -514,11 +637,11 @@ body {
     <span class="tag tag-web">web</span>
     <span class="tag tag-pwn">privesc</span>
     <span class="post-date">2026-03-24</span>
-    <span class="post-event">- <strong>HackTheBox · principal</strong></span>
+    <span class="post-event">– <strong>HackTheBox · principal</strong></span>
   </div>
 
   <h1 class="post-title">
-    CVE-2026-29000 -> plaintext creds in API -> SSH CA forgery -> root
+    CVE-2026-29000 → plaintext creds in API → SSH CA forgery → root
   </h1>
 
   <!-- ── overview ── -->
@@ -535,7 +658,7 @@ body {
     critical vulnerability in the library allows an attacker to wrap a completely
     unsigned <code>alg:none</code> JWT inside a valid JWE envelope, bypassing
     signature verification entirely. From there the dashboard hands over an
-    encryption key and SSH CA path in plaintext - credentials that chain directly into
+    encryption key and SSH CA path in plaintext — credentials that chain directly into
     root via SSH certificate forgery.
   </p>
 
@@ -543,7 +666,7 @@ body {
     <div class="chain-step">
       <span class="chain-n">01.</span>
       <div>
-        <div class="chain-label">nmap -> Jetty + pac4j-jwt header</div>
+        <div class="chain-label">nmap → Jetty + pac4j-jwt header</div>
         <div class="chain-sub">port 8080, X-Powered-By leaks the exact library</div>
       </div>
     </div>
@@ -551,13 +674,13 @@ body {
       <span class="chain-n">02.</span>
       <div>
         <div class="chain-label">app.js leaks full JWT/JWE spec + API endpoints</div>
-        <div class="chain-sub">token schema, role constants, JWKS endpoint - all in client-side JS</div>
+        <div class="chain-sub">token schema, role constants, JWKS endpoint — all in client-side JS</div>
       </div>
     </div>
     <div class="chain-step">
       <span class="chain-n">03.</span>
       <div>
-        <div class="chain-label">CVE-2026-29000 - forge ROLE_ADMIN token, no creds needed</div>
+        <div class="chain-label">CVE-2026-29000 — forge ROLE_ADMIN token, no creds needed</div>
         <div class="chain-sub">PlainJWT inside JWE skips signature verification in vulnerable pac4j</div>
       </div>
     </div>
@@ -571,14 +694,14 @@ body {
     <div class="chain-step">
       <span class="chain-n">05.</span>
       <div>
-        <div class="chain-label">SSH in as svc-deploy -> user flag</div>
+        <div class="chain-label">SSH in as svc-deploy → user flag</div>
         <div class="chain-sub">password from step 4, no further exploitation required</div>
       </div>
     </div>
     <div class="chain-step">
       <span class="chain-n">06.</span>
       <div>
-        <div class="chain-label">readable SSH CA private key -> forge root certificate</div>
+        <div class="chain-label">readable SSH CA private key → forge root certificate</div>
         <div class="chain-sub">misconfigured file permissions let svc-deploy sign for any principal</div>
       </div>
     </div>
@@ -588,7 +711,7 @@ body {
   <h2>recon</h2>
 
   <p>
-    Started with a comprehensive nmap scan - version detection, default scripts, and OS
+    Started with a comprehensive nmap scan — version detection, default scripts, and OS
     fingerprinting all at once:
   </p>
 
@@ -615,7 +738,7 @@ body {
       <tr>
         <td><code>8080/tcp</code></td>
         <td>http-proxy</td>
-        <td>Jetty - redirects to <code>/login</code></td>
+        <td>Jetty — redirects to <code>/login</code></td>
       </tr>
     </tbody>
   </table>
@@ -656,13 +779,13 @@ body {
       <tr><td><code>/login</code></td><td>200</td><td>landing page</td></tr>
       <tr><td><code>/dashboard</code></td><td>200</td><td>bounces to /login unauthenticated</td></tr>
       <tr><td><code>/reset-password</code></td><td>501</td><td>not implemented</td></tr>
-      <tr><td><code>/error</code></td><td>500</td><td>verbose errors - noted</td></tr>
+      <tr><td><code>/error</code></td><td>500</td><td>verbose errors — noted</td></tr>
       <tr><td><code>/WEB-INF</code></td><td>500</td><td>Java web archive structure visible</td></tr>
     </tbody>
   </table>
 
   <p>
-    Nothing immediately exploitable - but the <code>/dashboard</code> redirect was
+    Nothing immediately exploitable — but the <code>/dashboard</code> redirect was
     interesting. The server knows the route exists and returns a 200; it's client-side
     auth enforcement. That told me the API was worth examining more closely, so I
     pulled the page source.
@@ -672,7 +795,7 @@ body {
 
   <p>
     The login page sources a single JS bundle at <code>/static/js/app.js</code>. What
-    I found inside was genuinely remarkable - the entire authentication architecture
+    I found inside was genuinely remarkable — the entire authentication architecture
     documented in JSDoc comments, served publicly to any visitor:
   </p>
 
@@ -697,11 +820,11 @@ body {
  *   exp   - expiration (epoch)
  */
 
-const JWKS_ENDPOINT    = '/api/auth/jwks';
-const AUTH_ENDPOINT    = '/api/auth/login';
+const JWKS_ENDPOINT      = '/api/auth/jwks';
+const AUTH_ENDPOINT      = '/api/auth/login';
 const DASHBOARD_ENDPOINT = '/api/dashboard';
-const USERS_ENDPOINT   = '/api/users';
-const SETTINGS_ENDPOINT = '/api/settings';
+const USERS_ENDPOINT     = '/api/users';
+const SETTINGS_ENDPOINT  = '/api/settings';
 
 const ROLES = {
   ADMIN:   'ROLE_ADMIN',
@@ -720,12 +843,12 @@ const ROLES = {
   <blockquote>
     <p>
       leaving architecture documentation in client-side JS is a significant risk even when
-      there's no underlying vulnerability - paired with CVE-2026-29000 it becomes a
+      there's no underlying vulnerability — paired with CVE-2026-29000 it becomes a
       step-by-step attack guide.
     </p>
   </blockquote>
 
-  <h2>exploitation - CVE-2026-29000</h2>
+  <h2>exploitation — CVE-2026-29000</h2>
 
   <h3>how the vulnerability works</h3>
 
@@ -734,15 +857,15 @@ const ROLES = {
     decrypt the outer JWE, parse the inner payload, then verify the inner JWT's
     signature. The bug lives in step three. After decryption, the library calls
     <code>toSignedJWT()</code> on the payload to extract a <code>SignedJWT</code> for
-    verification. If the inner token is a <code>PlainJWT</code> - a JWT with
-    <code>"alg":"none"</code> and no signature - this method returns <code>null</code>.
+    verification. If the inner token is a <code>PlainJWT</code> — a JWT with
+    <code>"alg":"none"</code> and no signature — this method returns <code>null</code>.
   </p>
 
   <p>
     The vulnerable logic then checks <code>if signedJWT is not None</code> before running
     verification. Since it's null, the entire signature check is skipped. The library
     moves on, extracts claims from the payload anyway, and creates a fully authenticated
-    session. An attacker only needs the server's public key to encrypt the outer JWE -
+    session. An attacker only needs the server's public key to encrypt the outer JWE —
     which is served openly at <code>/api/auth/jwks</code>.
   </p>
 
@@ -761,14 +884,14 @@ def main():
     parser.add_argument("-t", "--target", required=True)
     args = parser.parse_args()
 
-    # fetch server's public key - served openly, no auth required
+    # fetch server's public key — served openly, no auth required
     jwks_url = f"{args.target}/api/auth/jwks"
     key_data = requests.get(jwks_url).json()["keys"][0]
     pub_key  = jwk.JWK(**key_data)
 
     now = int(time.time())
 
-    # inner token: alg:none (PlainJWT) - no signature, verification skipped
+    # inner token: alg:none (PlainJWT) — no signature, verification skipped
     header  = b64url('{"alg":"none"}')
     payload = b64url(json.dumps({
         "sub":  "admin",
@@ -798,7 +921,7 @@ if __name__ == "__main__":
 
   <p>
     Running the script against the target produces a valid JWE token encoding an admin
-    session - no credentials, no brute-force, no private key material. Drop it into
+    session — no credentials, no brute-force, no private key material. Drop it into
     <code>sessionStorage</code> under the key <code>auth_token</code> and navigate to
     <code>/dashboard</code>. The server accepts it without complaint.
   </p>
@@ -814,7 +937,7 @@ if __name__ == "__main__":
     The Users panel lists a handful of accounts. One entry stands out immediately:
     a service account named <code>svc-deploy</code> with the role <code>deployer</code>
     and a note reading <em>"Service account for automated deployments via SSH certificate
-    auth."</em> Filed away - SSH cert auth is going to be relevant.
+    auth."</em> Filed away — SSH cert auth is going to be relevant.
   </p>
 
   <h3>settings</h3>
@@ -836,12 +959,12 @@ sessionManagement  stateless</code></pre>
 sshCertAuth     enabled
 database        H2 (embedded)
 notes           SSH certificate auth configured for automation
-                - see /opt/principal/ssh/ for CA config.</code></pre>
+                — see /opt/principal/ssh/ for CA config.</code></pre>
 
   <blockquote>
     <p>
       storing infrastructure secrets in an API endpoint that any authenticated user can
-      reach - including one whose session was forged without credentials - is the kind of
+      reach — including one whose session was forged without credentials — is the kind of
       thing that turns a web vulnerability into a full system compromise.
     </p>
   </blockquote>
@@ -882,7 +1005,7 @@ drwxr-xr-x 5 root root      4096 Mar 11 04:22 ..
 
   <p>
     The CA private key is group-readable, and <code>svc-deploy</code> is in the
-    <code>deployers</code> group. This is the misconfiguration that ends the box -
+    <code>deployers</code> group. This is the misconfiguration that ends the box —
     the private key of a CA trusted by <code>sshd</code> should be accessible only
     to root. With read access to it, we can sign any certificate for any principal,
     including root.
@@ -927,7 +1050,7 @@ root@principal:~# cat root.txt</code></pre>
 
   <p>
     Three independent failures stack here into a complete, credential-free root.
-    Any one of them fixed in isolation would have stopped the chain - but all three
+    Any one of them fixed in isolation would have stopped the chain — but all three
     have to coexist for the full compromise to land.
   </p>
 
@@ -940,13 +1063,13 @@ root@principal:~# cat root.txt</code></pre>
     <li>
       <strong>Strip implementation details from client-side code.</strong> Documenting
       your JWT algorithm, claims schema, and API surface in a JS bundle served pre-auth
-      is not a vulnerability on its own - but it eliminates every guessing step for an
+      is not a vulnerability on its own — but it eliminates every guessing step for an
       attacker who finds one.
     </li>
     <li>
       <strong>Never store secrets in API responses.</strong> An encryption key
-      (read: password) visible in <code>/api/settings</code> to any authenticated user
-      - including a forged one - is not an encryption key. It's a footnote.
+      (read: password) visible in <code>/api/settings</code> to any authenticated user —
+      including a forged one — is not an encryption key. It's a footnote.
     </li>
     <li>
       <strong>Lock down SSH CA private keys.</strong> A CA key readable by a service
@@ -977,18 +1100,18 @@ function resize() {
 resize();
 window.addEventListener('resize', resize);
 
-const STAR_COUNT = 340;
+const STAR_COUNT = 320;
 const stars = Array.from({ length: STAR_COUNT }, () => {
   const side   = Math.random() < 0.5 ? 'left' : 'right';
-  const margin = 0.08 + Math.pow(Math.random(), 1.4) * 0.22;
+  const margin = 0.06 + Math.pow(Math.random(), 1.5) * 0.24;
   return {
     side, nx: margin,
     ny:    0.02 + Math.random() * 0.96,
-    r:     Math.random() < 0.12 ? 1.0 + Math.random() * 0.9 : 0.25 + Math.random() * 0.6,
-    base:  0.08 + Math.random() * 0.55,
-    speed: 0.25 + Math.random() * 1.2,
+    r:     Math.random() < 0.12 ? 1.0 + Math.random() * 0.9 : 0.22 + Math.random() * 0.55,
+    base:  0.07 + Math.random() * 0.5,
+    speed: 0.2 + Math.random() * 1.1,
     phase: Math.random() * Math.PI * 2,
-    spike: Math.random() < 0.06,
+    spike: Math.random() < 0.055,
   };
 });
 
@@ -996,10 +1119,11 @@ function drawStars() {
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
 
-  const colW  = Math.min(640, W);
+  const colW  = Math.min(680, W);
   const colL  = (W - colW) / 2;
   const colR  = colL + colW;
-  const sideW = Math.max(colL, 1);
+  /* fix: sideW was 1 on narrow viewports causing NaN positions */
+  const sideW = Math.max(colL, 2);
   const t     = performance.now() / 1000;
 
   for (const s of stars) {
@@ -1008,11 +1132,15 @@ function drawStars() {
       : colR + s.nx * sideW;
     const y = s.ny * H;
 
+    /* fix: skip stars that would render inside article column */
+    if (s.side === 'left'  && x >= colL) continue;
+    if (s.side === 'right' && x <= colR) continue;
+
     const distFromArticle = s.side === 'left' ? colL - x : x - colR;
-    const edgeFade  = Math.min(1, distFromArticle / 40);
+    const edgeFade  = Math.min(1, distFromArticle / 50);
     const outerFade = s.side === 'left'
-      ? Math.min(1, x / 30)
-      : Math.min(1, (W - x) / 30);
+      ? Math.min(1, x / 40)
+      : Math.min(1, (W - x) / 40);
 
     const twinkle = s.base + (1 - s.base) * 0.5 * (1 + Math.sin(t * s.speed + s.phase));
     const alpha   = twinkle * Math.max(0, edgeFade) * outerFade;
@@ -1035,7 +1163,7 @@ function drawStars() {
       ctx.closePath();
       ctx.fill();
       const g = ctx.createRadialGradient(x, y, 0, x, y, rs * 6);
-      g.addColorStop(0, 'rgba(180,200,255,0.22)');
+      g.addColorStop(0, 'rgba(180,200,255,0.2)');
       g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g;
       ctx.beginPath();
@@ -1043,8 +1171,8 @@ function drawStars() {
       ctx.fill();
     } else {
       const g = ctx.createRadialGradient(x, y, 0, x, y, s.r * 3.5);
-      g.addColorStop(0, 'rgba(210,220,255,0.9)');
-      g.addColorStop(0.4, 'rgba(160,180,255,0.3)');
+      g.addColorStop(0, 'rgba(210,220,255,0.88)');
+      g.addColorStop(0.4, 'rgba(160,180,255,0.28)');
       g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g;
       ctx.beginPath();
@@ -1068,7 +1196,7 @@ document.querySelectorAll('.brand-stxr .l').forEach((l, i) => {
   setInterval(() => {
     phase += 0.04;
     const bright = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(phase));
-    l.style.textShadow = `0 0 ${Math.round(bright * 18)}px rgba(180,200,255,${(bright * 0.3).toFixed(2)})`;
+    l.style.textShadow = `0 0 ${Math.round(bright * 18)}px rgba(180,200,255,${(bright * 0.28).toFixed(2)})`;
   }, 50);
 });
 </script>
